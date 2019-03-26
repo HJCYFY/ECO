@@ -1,32 +1,63 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(eco)
 
-## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fsee -fomit-frame-pointer -fno-signed-zeros -fno-math-errno -funroll-loops")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -fsee -fomit-frame-pointer -fno-signed-zeros -fno-math-errno -funroll-loops -lfftw3 -lm")
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules/")
+FIND_PACKAGE(Eigen REQUIRED)
+FIND_PACKAGE(catkin REQUIRED)
+FIND_PACKAGE(OpenCV REQUIRED)
 
-find_package(catkin REQUIRED)
-find_package(OpenCV REQUIRED)
-
-catkin_package(
-)
-
-# file(GLOB  SOURCES ${CMAKE_SOURCE_DIR}/src/feature_extraction/*.cpp)
-
-add_library(source  
-            src/feature_extraction/hog.cpp)	# TODO shared?
-
-
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
 include_directories(
     include
+    include/feat_extra
+    include/implements
+    ${Eigen_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
 )
 
+add_library( IMP_SRC
+        src/config.cpp
+        src/matlab_func.cpp
+        src/feat_extra/fhog.cpp
+        src/feat_extra/cnf.cpp
 
-add_executable(test_ensure src/test_ensure.cpp)       
-target_link_libraries(test_ensure 
-                    source
-                    ${OpenCV_LIBRARIES})
+        src/implements/tracker.cpp
+        src/implements/train.cpp
+        src/implements/scale_filter.cpp
+        src/implements/sample_space.cpp
+		)	# TODO shared?
+# add_dependencies(IMP_SRC ${OpenCV_LIBRARIES}
+#                             m)
+
+
+add_executable(func_test func_test.cpp)       
+target_link_libraries(func_test
+                    IMP_SRC
+                    ${OpenCV_LIBRARIES}
+                    fftw3
+                    m
+                    )
+
+add_executable(eco main.cpp)       
+target_link_libraries(eco 
+                    IMP_SRC
+                    ${OpenCV_LIBRARIES}
+                    fftw3
+                    m
+                    )
+
+add_executable(vot100_test vot100_test.cpp)       
+target_link_libraries(vot100_test 
+                    IMP_SRC
+                    ${OpenCV_LIBRARIES}
+                    fftw3
+                    m
+                    )
+
+add_executable(video_test test_720p.cpp)       
+target_link_libraries(video_test 
+                    IMP_SRC
+                    ${OpenCV_LIBRARIES}
+                    fftw3
+                    m
+                    )
